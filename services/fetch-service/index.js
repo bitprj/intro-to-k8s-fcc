@@ -80,13 +80,13 @@ router.post('/fetch', upload.any(), async(req, res) => {
 });
 
 async function listPictures() {
-    var sql = "SELECT * FROM main.images WHERE approve='true'";
+    var sql = "SELECT * FROM main.images;";
     const results = await con.promise().query(sql)
     return results
 };
 
 async function getSpecificHat(style) {
-    var sql = `SELECT * FROM main.images WHERE description='${style}' AND approve='true'`;
+    var sql = `SELECT * FROM main.images WHERE description='${style}';`;
     const results = await con.promise().query(sql)
         .catch(err => console.log(err))
     
@@ -104,7 +104,7 @@ async function getSpecificHat(style) {
 }
 
 async function getHatData() {
-    var sql = `SELECT description, base64 FROM main.images WHERE approve='true'`;
+    var sql = `SELECT description, base64 FROM main.images`;
     const results = await con.promise().query(sql)
     
     let hatList = results[0]
