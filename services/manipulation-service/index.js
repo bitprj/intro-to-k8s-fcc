@@ -28,7 +28,6 @@ router.post('/manipulate', upload.any(), async(req, res) => {
     let hat = req.files[1].buffer
 
     try {
-        console.log(baby)
         result = await findFace(face)
     } catch (e) {
         res.send("Invalid image")
