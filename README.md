@@ -18,10 +18,6 @@ To test the API directly:
 ```
 minikube service -n default --url gateway-service
 ```
-To interact with the API through the frontend:
-```
-minikube service -n default --url frontend-service
-```
 
 ### Cleaning Up
 ```
