@@ -14,16 +14,12 @@ spec:
     spec:
       containers:
         - name: gateway-service
-          image: bitprj/gateway-service-lite
+          image: bitprj/gateway-service-fcc
           ports:
             - containerPort: 4444
           env:
             - name: FETCH_ENDPOINT
               value: fetch-service:80
-            - name: ADD_ENDPOINT
-              value: add-service:80
-            - name: MODERATE_ENDPOINT
-              value: moderate-service:80
           imagePullPolicy: Always
 ---
 apiVersion: v1

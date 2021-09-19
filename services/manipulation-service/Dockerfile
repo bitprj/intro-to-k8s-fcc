@@ -7,7 +7,6 @@ COPY . .
 RUN npm install
 RUN npm i canvas
 RUN npm i @tensorflow/tfjs-core@1.7.0
-RUN npm i @tensorflow/tfjs-node@1.7.0
 CMD [ "node", "index.js" ]
 
 # docker build -t manipulate .
