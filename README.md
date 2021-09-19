@@ -9,7 +9,7 @@ minikube start
 ```
 Clone this repository and apply the `kube` folder.
 ```
-kubectl apply -f minikube
+kubectl apply -f kube
 ```
 
 ### Test Cluster
