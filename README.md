@@ -7,9 +7,8 @@ Follow instructions [here](https://v1-18.docs.kubernetes.io/docs/tasks/tools/ins
 ```
 minikube start
 ```
-(For now download file from [here](https://easyupload.io/rar6u7), we can add wget command later).
+Clone this repository and apply the `kube` folder.
 ```
-unzip minikube.zip
 kubectl apply -f minikube
 ```
 
