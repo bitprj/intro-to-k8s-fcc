@@ -35,13 +35,6 @@ router.get('/fetch', upload.any(), async(req, res) => {
     let b64Result = ''
     let numberHats = ''
 
-    if (req.query.number != undefined) {
-        numberHats = req.query.number
-    } else {
-        numberHats = 1
-    }
-    console.log(numberHats)
-
     if (hats == "true") {
         console.log("Getting hats")
         let data = await getHatData()
@@ -56,12 +49,12 @@ router.get('/fetch', upload.any(), async(req, res) => {
              });             
         }
         console.log("Got specific hat")
-        b64Result = await requestManipulate(face, hat, numberHats)
+        b64Result = await requestManipulate(face, hat)
         res.send(b64Result)
     } else {
         console.log("No custom image, no style")
         let hat = await getRandomHat()
-        b64Result = await requestManipulate(face, hat, numberHats)
+        b64Result = await requestManipulate(face, hat)
         res.send(b64Result)
     }
 });
@@ -70,24 +63,17 @@ router.post('/fetch', upload.any(), async(req, res) => {
     let style = req.query.style
     let face = req.files[0].buffer
     let b64Result = ''
-    let numberHats = ''
-
-    if (req.query.number != undefined) {
-        numberHats = parseInt(req.query.number)
-    } else {
-        numberHats = 1
-    }
 
     if (style != undefined) {
         console.log("Custom image, no style")
         let hat = await getSpecificHat(style)
 
-        b64Result = await requestManipulate(face, hat, numberHats)
+        b64Result = await requestManipulate(face, hat)
     } else {
         console.log("Custom image, yes style")
         let hat = await getRandomHat()
 
-        b64Result = await requestManipulate(face, hat, numberHats)
+        b64Result = await requestManipulate(face, hat)
     }
 
     res.send(b64Result)
@@ -158,35 +144,28 @@ async function defaultBoss() {
     return johnKinmonth
 }
 
-async function requestManipulate(face, hat, numberHats) {
+async function requestManipulate(face, hat) {
     // hit the upload endpoint to upload image and retrieve unique image id
     let faceData = face
-    console.log("Start loop")
-    console.log(numberHats)
-    for (var i = numberHats; i >= 1; i--) {
-        console.log(i)
-        let translate = i*0.6
-        let rotate = i*10
-        let formData = await createForm(faceData, hat)
-        const formHeaders = formData.getHeaders();
-        const manipulateRequest = await fetch(`http://${process.env.MANIPULATE_ENDPOINT}/manipulate?translate=${translate}&rotate=${rotate}`, {
-            method: 'POST',
-            body: formData,
-                headers: {
-                ...formHeaders,
-                },        
-        });
-    
-        var b64Result = await manipulateRequest.json()
+    let formData = await createForm(faceData, hat)
+    const formHeaders = formData.getHeaders();
+    const manipulateRequest = await fetch(`http://${process.env.MANIPULATE_ENDPOINT}/manipulate`, {
+        method: 'POST',
+        body: formData,
+            headers: {
+            ...formHeaders,
+            },        
+    });
 
-        if (i == 1) {
-            faceData = b64Result
-        } else {
-            faceData = Buffer.from(b64Result.finalBaby.replace("data:image/png;base64,", ""), "base64");
-        }
+    var b64Result = await manipulateRequest.json()
 
-        console.log(`Received response from /manipulate [${i}]`)
+    if (i == 1) {
+        faceData = b64Result
+    } else {
+        faceData = Buffer.from(b64Result.finalFace.replace("data:image/png;base64,", ""), "base64");
     }
+
+    console.log(`Received response from /manipulate [${i}]`)
 
     return faceData
 }
