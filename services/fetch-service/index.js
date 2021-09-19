@@ -159,15 +159,9 @@ async function requestManipulate(face, hat) {
 
     var b64Result = await manipulateRequest.json()
 
-    if (i == 1) {
-        faceData = b64Result
-    } else {
-        faceData = Buffer.from(b64Result.finalFace.replace("data:image/png;base64,", ""), "base64");
-    }
+    console.log(`Received response from /manipulate`)
 
-    console.log(`Received response from /manipulate [${i}]`)
-
-    return faceData
+    return b64Result
 }
 
 async function createForm(face, hat) {
