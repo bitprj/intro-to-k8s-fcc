@@ -13,6 +13,7 @@ npm i multer
 npm i mysql2
 npm i node-fetch
 npm i form-data
+npm i dot-env
 ```
 
 Add `"type": "module",` to your `package.json` file up top so the section looks like this:
@@ -133,8 +134,246 @@ router.get('/fetch', upload.any(), async(req, res) => {
     console.log(`Hat requested with a style of: ${style}`)
 
     let face = await defaultImage()
+    let b64Result = ''
+    // Just defining a variable we'll use later!
 }
 ```
+
+Let's create functions for this purpose since it's highly likely we'll need to use this code again. We need one named `getRandomHat()` and one for `getSpecificHat()`.
+
+> **Why?** If there is no value for "style", we will choose a random hat for the user. If the user specifies something, we will pick that hat that they want.
+
+### Setting up a MySQL Server
+Before we can begin writing the functions, we're going to need a place to retrieve the hats from. In this case, it'll be a MySQL database which will run locally from your computer. Follow [these instructions](https://dev.mysql.com/doc/mysql-getting-started/en/#mysql-getting-started-installing) to get started by installing it.
+
+#### Cheatsheet for MacOS Users
+```
+brew install mysql
+mysql.server start
+mysql -u root
+```
+With this, you should be able to login to the server and see the prompt for commands.
+
+Once your database is up and running, we need to add hats in for us to test with and update permissions. On the MySQL prompt, run [these](https://gist.github.com/emsesc/30edbcf3d043ddd56a66218304e0ac34) SQL commands.
+
+**Here's what it does:**
+1. It creates the table and the columns we'll need to store hat data.
+2. It inserts our first "cat-ears" hat and a "spicy" hat.
+3. It creates an `admin` user with a password of `password` (very secure) that is accessible anywhere on your local network.
+
+### Connecting to your MySQL instance
+To create a connection to the database, place this code at the top of the file where other packages, like `multer` were defined.
+
+```js
+const HOST = process.env.HOST;
+const PASSWORD = process.env.PASSWORD;
+
+const con = mysql.createConnection({
+    host: HOST,
+    port: '3306',
+    user: "admin",
+    password: PASSWORD,
+});
+```
+
+Next, create a `.env` file in the directory of your `fetch-service`. It's always good practice to store sensitive values, like database credentials, in environment variables. To define `HOST` and `PASSWORD`, put this in the `.env` file.
+```
+HOST=localhost
+PASSWORD=password
+```
+### Retrieving Hats
+We can now write the two functions to either get a specific style of a hat or a random hat in the databse!
+
+**`getRandomHat()`**
+> **Input:** None! **Output:** Random hat picture
+
+Let's say a user didn't specify what kind of hat they wanted. In this case, we would need to retrieve ALL the hats from the database and randomly select one.
+
+```js
+async function getRandomHat() {
+    console.log("getRandomHat() called, getting random hat!")
+    // Let's list out ALL the hats!
+    var sql = "SELECT * FROM main.images;";
+    const results = await con.promise().query(sql)
+
+    // We only want the list of hats, but SQL will give us more.
+    let hatList = hats[0]
+    console.log(hatList)
+
+    // We'll add more here...
+}
+```
+First, we execute a query to the connection we just established to select ALL images. Then, we access the first value of the result since that is where the hat data is located.
+```js
+let randNum = Math.floor(Math.random() * hatList.length)
+```
+Now that we have the whole list, we still need to choose a random item from it.
+```js
+let hatLink = hatList[randNum].base64
+return Buffer.from(hatLink, "base64")
+```
+Adding these two lines of code to the end of the `getRandomHat()` function, we successfully access a random value of the list and get the base64. Using `Buffer.from()` we can convert the base64 to a Buffer object, which we will work with.
+
+**`getSpecificHat(style)`**
+> **Input:** Style! **Output:** Specific hat selected by user
+
+Let's say a user DID specify a hat. In this case, we would need to retrieve the hat of their choosing.
+
+```js
+async function getSpecificHat(style) {
+    console.log("getSpecificHat() called, getting a hat!")
+    // Let's select the right hat using the WHERE clause
+    var sql = `SELECT * FROM main.images WHERE description='${style}';`;
+    const results = await con.promise().query(sql)
+
+    // We only want the list of hats, but SQL will give us more.
+    let hatList = hats[0]
+    console.log(hatList)
+
+    // We'll add more here...
+}
+```
+First, we execute a query to the connection we just established to select a hat with the style specified by the user. Then, we access the first value of the result since that is where the hat data is located.
+```js
+if (hatList.length == 0){
+    return null
+}
+```
+Because it's possible that the hat requested by the user may not exist, we can return a `null` value from the function.
+```js
+let hatLink = hatList[0].base64
+return Buffer.from(hatLink, "base64")
+```
+Adding these two lines of code to the end of the `getRandomHat()` function, we successfully access the chosen hat and get the base64. Using `Buffer.from()`, we can convert the base64 to a Buffer object, which we will work with.
+### Talking with `manipulate-service`
+Now that we have:
+* Face image data
+* A hat specified by `style`
+
+We can send a request to the `manipulate-service`. Since we'll be reusing this code, it's smart to create another function named `requestManipulate()`. The input will be **face** and **hat** image data, and it will return the **face with the hat**!
+
+To get our function started, we've begun by creating a new form data object to hold our images: face and hat. Our headers for the POST request to manipulate have also been generated.
+```js
+async function requestManipulate(face, hat) {
+    console.log("requestManipulate() called, POSTing face and hat to manipulate endpoint.")
+    // Setting up a multipart-formdata request
+    let formData = new FormData()
+    formData.append('file', face, {filename: "face", data: face})
+    formData.append('file', hat, {filename: "hat", data: hat})
+    const formHeaders = formData.getHeaders();
+}
+```
+We will now be adding another value to the `.env` file.
+```
+MANIPULATE_ENDPOINT=localhost:80
+```
+Also, notice below that we are using the `fetch` npm package we installed earlier. We placed the `formData` object with the images in the body and 
+```js
+const manipulateRequest = await fetch(`http://${process.env.MANIPULATE_ENDPOINT}/manipulate`, {
+    method: 'POST',
+    body: formData,
+        headers: {
+        ...formHeaders,
+        },        
+});
+
+var b64Result = await manipulateRequest.json()
+return b64Result
+```
+Once we `await` and receive the successfully manipulated image, we will receive it as JSON data and return it from this function.
+### Hat logic & putting it together
+Head back to the `router.get()` function we started earlier to receive GET requests to the `fetch-service`. Using the various functions we've written, we can now piece it all together!
+
+Let's consider the first situation. **If the user specifies a style** it will not have an `undefined` style. In this case, we should call the `getSpecificHat` function and pass in the style.
+```js
+if (style != undefined) {
+    // Logging information
+    console.log("User specified style.")
+    console.log("Using default image.")
+
+    // In that case, we should call the getSpecificHat() function.
+    let hat = await getSpecificHat(style)
+}
+```
+Now that we've received the hat, we do need to check if the output is null. If it is, that means the user's hat does not exist. Instead of returning a hat, we will return an error message.
+```js
+if (hat == null) {
+    return res.status(400).send({
+        message: 'This hat style does not exist! If you want this style - try submitting it'
+        });             
+}
+```
+If this is not the case, the code will continue to run. Since we used `getSpecificHat()` to retrieve a hat, we now have a hat and a face to send to `manipulate`.
+```js
+b64Result = await requestManipulate(face, hat)
+res.send(b64Result)
+```
+Once the base64 image is received, we'll send that as the response to this GET request.
+
+We've completed the first scenario where the user submits a style. What if they don't? **We can add on an `else` statement for this case**.
+```js
+else {
+    console.log("User did not specify style.")
+    console.log("Using default image.")
+
+    // We're getting a random hat and sending it to manipulate
+    let hat = await getRandomHat()
+    b64Result = await requestManipulate(face, hat)
+    res.send(b64Result)
+}
+```
+Just like before, we get a hat, except this time it's random. Using `requestManipulate()` we can receive a manipulated image with the face and hat and send it as an output of the GET request.
+
+### Doing it again: with POST
+If the user wants to use their own face image and not our default one, they'll make a POST request with an image file in the body of the request.
+
+Let's start out like before, retrieving the `style` parameter's value and defining the `b64Result` variable. This time, however, we'll also need to get the face image that the user uploads.
+```js
+router.post('/fetch', upload.any(), async(req, res) => {
+    let style = req.query.style
+    let face = req.files[0].buffer
+    let b64Result = ''
+});
+```
+Just like with the GET request, we will get the specified hat with the style if the paramter value is undefined. 
+```js
+if (style != undefined) {
+    console.log("User did not specify style.")
+    console.log("Using personalized image.")
+    let hat = await getSpecificHat(style)
+} 
+```
+Inside of the `if` statement, we will add another. Now that we've received the hat, we do need to check if the output is null. If it is, that means the user's hat does not exist. Instead of returning a hat, we will return an error message.
+```js
+if (hat == null) {
+    return res.status(400).send({
+        message: 'This hat style does not exist! If you want this style - try submitting it'
+        });             
+}
+```
+Let's consider the other possibility again: what if users don't specify a hat but send in an image?
+```js
+else {
+    console.log("User did not specify style.")
+    console.log("Using personalized image.")
+    let hat = await getRandomHat()
+
+    b64Result = await requestManipulate(face, hat)
+}
+
+res.send(b64Result)
+```
+We can simply call the `getRandomHat()` function we wrote and send the hat and face to the `requestManipulate()` function. This gives us a base64 result we can send as a response to the POST request.
+
+### Testing Locally 2.0
+Testing locally is the same as before, except you will need to make sure your `manipulate-service` and SQL server is running.
+
+Start the `fetch-service` by running `node -r dotenv/config index.js` and make GET or POST requests to `http://localhost:1337/fetch`.
+
+#### Examples to test out:
+* Make a GET request to `http://localhost:1337/fetch?style=spicy`. Do you get a spicy hat with your default image?
+* Make a POST request to `http://localhost:1337/fetch?style=cat-ears` with a body in multipart-formdata containing an image with a face. Do you get cat-ears on your image?
+
 ### Dockerizing with a Whale
 Now that we have a complete `express` server, let's make it into a container and deploy it to test.
 
