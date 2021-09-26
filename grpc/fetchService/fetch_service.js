@@ -21,17 +21,38 @@ function requestManipulate(face, hat) {
     return response.base64
 }
 
-import express from 'express'
-import multer from 'multer'
-import mysql from 'mysql2'
-import fetch from 'node-fetch'
-const upload = multer()
-const app = express()
-var router = express.Router();
-const PORT = 1337
+function fetchService(call, callback) {
+    let style = call.request.style;
+    let face = call.request.face;
+    var hat;
+    if (style != undefined) {
+        hat = await getSpecificHat(style)
+    } else {
+        hat = await getRandomHat()
+    }
 
-// for testing locally: node -r dotenv/config index.js  
-// https://stackoverflow.com/questions/28305120/differences-between-express-router-and-app-get
+    if (call.request.face == undefined) {
+        face = await defaultBoss()
+    }
+
+    b64Result = await requestManipulate(face, hat)
+
+    callback(null, {base64: b64Result});
+}
+
+
+function main() {
+    var server = new grpc.Server();
+    console.log("Fetch Service running on Port 50052")
+    server.addService(manipulate_proto.Fetch.service, {fetchService: fetchService});
+    server.bindAsync('0.0.0.0:50052', grpc.ServerCredentials.createInsecure(), () => {
+      server.start();
+    });
+  }
+  
+  main();
+
+import mysql from 'mysql2'
 
 const HOST = process.env.HOST;
 const PASSWORD = process.env.PASSWORD;
@@ -42,57 +63,7 @@ const con = mysql.createConnection({
     user: "admin",
     password: PASSWORD,
 });
-
-app.use('/', router)
-
-app.listen(PORT, () => {
-    console.log(`API Gateway started on port ${PORT}`)
-})
-
-router.get('/fetch', upload.any(), async(req, res) => {
-    let style = req.query.style
-    let face = await defaultBoss()
-    let b64Result = ''
-
-    if (style != undefined) {
-        console.log("No custom image, yes style")
-        let hat = await getSpecificHat(style)
-        if (hat == null) {
-            return res.status(400).send({
-                message: 'This hat style does not exist! If you want this style - try submitting it'
-             });             
-        }
-        console.log("Got specific hat")
-        b64Result = await requestManipulate(face, hat)
-        res.send(b64Result)
-    } else {
-        console.log("No custom image, no style")
-        let hat = await getRandomHat()
-        b64Result = await requestManipulate(face, hat)
-        res.send(b64Result)
-    }
-});
-
-router.post('/fetch', upload.any(), async(req, res) => {
-    let style = req.query.style
-    let face = req.files[0].buffer
-    let b64Result = ''
-
-    if (style != undefined) {
-        console.log("Custom image, no style")
-        let hat = await getSpecificHat(style)
-
-        b64Result = await requestManipulate(face, hat)
-    } else {
-        console.log("Custom image, yes style")
-        let hat = await getRandomHat()
-
-        b64Result = await requestManipulate(face, hat)
-    }
-
-    res.send(b64Result)
-});
-
+  
 async function getSpecificHat(style) {
     var sql = `SELECT * FROM main.images WHERE description='${style}';`;
     const results = await con.promise().query(sql)
