@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package manipulate;
+
+// The greeting service definition.
+service Manipulate {
+  // Sends a greeting
+  rpc ManipulateService (manipulateRequest) returns (manipulateResponse) {}
+}
+
+// The request message containing the user's name.
+message manipulateRequest {
+    bytes hat = 1;
+    bytes face = 2;
+}
+
+// The response message containing the greetings
+message manipulateResponse {
+  string base64 = 1;
+}
