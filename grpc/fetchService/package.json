@@ -1,0 +1,17 @@
+{
+  "name": "fetchService",
+  "version": "1.0.0",
+  "description": "",
+  "main": "fetch_service.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@grpc/grpc-js": "^1.3.7",
+    "@grpc/proto-loader": "^0.6.5",
+    "minimist": "^1.2.5"
+  }
+}
