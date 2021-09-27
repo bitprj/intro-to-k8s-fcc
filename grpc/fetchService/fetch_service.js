@@ -17,8 +17,15 @@ async function requestManipulate(face, hat) {
     target = process.env.MANIPULATE_ENDPOINT;
     var client = new manipulate_proto.Manipulate(target, grpc.credentials.createInsecure());
 
-    let response = await client.manipulateService({face: face, hat: hat})
-    return response.base64
+    let request = {face: face, hat: hat}
+    client.manipulateService(request, function(err, response) {
+        if (err) {
+          console.log(err)
+        } else {
+          console.log(response.base64)
+          return response.base64
+        }
+      });
 }
 
 async function fetchService(call, callback) {

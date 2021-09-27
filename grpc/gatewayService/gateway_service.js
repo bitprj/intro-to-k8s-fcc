@@ -15,10 +15,29 @@ var manipulate_proto = grpc.loadPackageDefinition(packageDefinition).manipulate;
 
 async function requestFetch(style, face) {
     target = process.env.FETCH_ENDPOINT;
-    var client = new manipulate_proto.Manipulate(target, grpc.credentials.createInsecure());
+    var client = new manipulate_proto.Fetch(target, grpc.credentials.createInsecure());
+    let request = {};
 
-    let response = await client.fetchService({style: style, face: face})
-    return response.base64
+    if (style != undefined && face != undefined) {
+        request = {style: style, face: face}
+    } else if (style == undefined && face != undefined) {
+        request = {face: face}
+    } else if (face == undefined && style != undefined) {
+        request = {style: style}
+    }
+
+    console.log(request)
+    console.log(face, style)
+
+    // let response = await client.fetchService(request)
+    client.fetchService(request, function(err, response) {
+        if (err) {
+          console.log(err)
+        } else {
+          console.log(response.base64)
+          return response.base64
+        }
+      });
 }
 
 const express = require('express')

@@ -16,13 +16,14 @@ var manipulate_proto = grpc.loadPackageDefinition(packageDefinition).manipulate;
  * Implements the SayHello RPC method.
  */
 async function manipulateService(call, callback) {
-    let face = call.request.face;
-    let hat = call.request.hat;
+    let face = Buffer.from(call.request.face).toString("base64");
+    let hat = Buffer.from(call.request.hat).toString("base64");
+
+    console.log(face, hat)
 
     try {
         result = await findFace(face)
     } catch (e) {
-        res.send("Invalid image")
         console.log(e)
     }
 
