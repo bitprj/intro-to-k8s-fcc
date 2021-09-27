@@ -15,7 +15,7 @@ var manipulate_proto = grpc.loadPackageDefinition(packageDefinition).manipulate;
 /**
  * Implements the SayHello RPC method.
  */
-function manipulateService(call, callback) {
+async function manipulateService(call, callback) {
     let face = call.request.face;
     let hat = call.request.hat;
 
@@ -44,6 +44,9 @@ function main() {
 }
 
 main();
+const Jimp = require('jimp')
+const faceapi = require('face-api.js')
+const canvas = require('canvas')
 
 const findFace = async (face) => {
     const image = await canvas.loadImage(face)

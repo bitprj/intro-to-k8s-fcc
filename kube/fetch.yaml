@@ -14,9 +14,9 @@ spec:
     spec:
       containers:
         - name: fetch-service
-          image: bitprj/fetch-service-fcc
+          image: bitprj/fetch-service-grpc
           ports:
-            - containerPort: 1337
+            - containerPort: 50052
           env:
             - name: HOST
               value: mysql

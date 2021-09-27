@@ -1,7 +1,7 @@
 var PROTO_PATH = __dirname + '/manipulate.proto';
 
-import grpc from '@grpc/grpc-js'
-import protoLoader from '@grpc/proto-loader'
+var grpc = require('@grpc/grpc-js');
+var protoLoader = require('@grpc/proto-loader');
 
 var packageDefinition = protoLoader.loadSync(
     PROTO_PATH,
@@ -13,8 +13,8 @@ var packageDefinition = protoLoader.loadSync(
     });
 var manipulate_proto = grpc.loadPackageDefinition(packageDefinition).manipulate;
 
-function requestFetch(style, face) {
-    target = 'localhost:50052';
+async function requestFetch(style, face) {
+    target = process.env.FETCH_ENDPOINT;
     var client = new manipulate_proto.Manipulate(target, grpc.credentials.createInsecure());
 
     let response = await client.fetchService({style: style, face: face})

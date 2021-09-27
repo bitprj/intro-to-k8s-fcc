@@ -1,7 +1,7 @@
 var PROTO_PATH = __dirname + '/manipulate.proto';
 
-import grpc from '@grpc/grpc-js'
-import protoLoader from '@grpc/proto-loader'
+var grpc = require('@grpc/grpc-js');
+var protoLoader = require('@grpc/proto-loader');
 
 var packageDefinition = protoLoader.loadSync(
     PROTO_PATH,
@@ -13,15 +13,15 @@ var packageDefinition = protoLoader.loadSync(
     });
 var manipulate_proto = grpc.loadPackageDefinition(packageDefinition).manipulate;
 
-function requestManipulate(face, hat) {
-    target = 'localhost:50051';
+async function requestManipulate(face, hat) {
+    target = process.env.MANIPULATE_ENDPOINT;
     var client = new manipulate_proto.Manipulate(target, grpc.credentials.createInsecure());
 
     let response = await client.manipulateService({face: face, hat: hat})
     return response.base64
 }
 
-function fetchService(call, callback) {
+async function fetchService(call, callback) {
     let style = call.request.style;
     let face = call.request.face;
     var hat;
@@ -52,7 +52,7 @@ function main() {
   
   main();
 
-import mysql from 'mysql2'
+const mysql = require('mysql2')
 
 const HOST = process.env.HOST;
 const PASSWORD = process.env.PASSWORD;
