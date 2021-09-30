@@ -28,11 +28,17 @@ app.listen(PORT, () => {
 })
 
 router.get('/fetch', upload.any(), async(req, res) => {
+    let hats = req.query.hats
     let style = req.query.style
     let face = await defaultBoss()
     let b64Result = ''
 
-    if (style != undefined) {
+    if (hats == "true") {
+        console.log("Getting hats")
+        let data = await getHatData()
+        console.log(data)
+        res.send(data)
+    } else if (style != undefined) {
         console.log("No custom image, yes style")
         let hat = await getSpecificHat(style)
         if (hat == null) {
@@ -106,6 +112,16 @@ async function getRandomHat() {
     console.log(hatLink)
 
     return Buffer.from(hatLink, "base64")
+}
+
+async function getHatData() {
+    var sql = `SELECT description, url FROM main.images`;
+    const results = await con.promise().query(sql)
+    
+    let hatList = results[0]
+    console.log(hatList)
+
+    return hatList
 }
 
 async function downloadBuffer(url) {
