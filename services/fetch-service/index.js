@@ -115,7 +115,7 @@ async function getRandomHat() {
 }
 
 async function getHatData() {
-    var sql = `SELECT description, url FROM main.images`;
+    var sql = `SELECT description, base64 FROM main.images`;
     const results = await con.promise().query(sql)
     
     let hatList = results[0]

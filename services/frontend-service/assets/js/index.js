@@ -15,18 +15,18 @@ function getImage(event) {
 
     let method = "GET";
     let options = {}
+    let typeHat = ""
     // show spinner and hide the person
     spinner.classList.remove("hidden");
     exampleImage.classList.add('hidden');
 
 
     if (typeInput) {
-        formData.append("type", typeInput.value);
-        console.log(typeInput.value);
+        typeHat = typeInput.value
         options = {
             method,
             headers: {
-                type: typeInput.value
+                type: typeHat
             }
         }
     }
@@ -43,8 +43,14 @@ function getImage(event) {
         console.log(fileInput.files[0]);
         formData.append("file", fileInput.files[0]);
 
-        options["body"] = formData;
-        options["method"] = method;
+        console.log(options)
+        options = {
+            method,
+            body: formData,
+            headers: {
+                type: typeHat
+            }
+        }
     }
 
     console.log("Making fetch")
@@ -54,7 +60,7 @@ function getImage(event) {
         .then(resp => resp.json())
         .then(data => {
             console.log(data)
-            exampleImage.src = data.result.finalBaby
+            exampleImage.src = data.result.finalFace
             console.log(exampleImage)
             exampleImage.classList.remove("hidden")
             spinner.classList.add("hidden")
@@ -94,7 +100,8 @@ window.onload = async function getHats(event) {
     }
 
     for (var i = 0; i < hatList.length; i++) {
-        $('.swiper-wrapper').append(`<div class="swiper-slide d-flex align-items-center justify-content-center"><img class="img-fluid swiper-pic" width="100px" src="${hatList[i].url}" alt=""></div>`)
+        console.log(hatList)
+        $('.swiper-wrapper').append(`<div class="swiper-slide d-flex align-items-center justify-content-center"><img class="img-fluid swiper-pic" src="data:image/png;base64,${hatList[i].base64}" alt=""></div>`)
     }
 
     const swiper = new Swiper('.swiper-container', {

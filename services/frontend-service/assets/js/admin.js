@@ -30,7 +30,7 @@ function createElements(obj) {
     hatCol.classList.add("col-md-6", "d-flex", "align-items-center", "justify-content-center");
     let hatImg = document.createElement("img");
     hatImg.classList.add("img-fluid", "hat-img");
-    hatImg.src = obj.Url;
+    hatImg.src = obj.Base64;
     hatImg.alt = obj.Description;
     hatCol.appendChild(hatImg);
 
@@ -41,14 +41,12 @@ function createElements(obj) {
     hatName.innerHTML = obj.Description;
     let approveLink = document.createElement("a");
     approveLink.innerHTML = "Approve"
-    approveLink.href = `/api/admin/moderate?id=${obj.ID}&approve=true`;
-    approveLink.setAttribute('target', '_blank');
+    approveLink.href = `/api/moderate?id=${obj.ID}&approve=true`;
     approveLink.classList.add("btn", "btn-success", "mr-2");
 
     let denyLink = document.createElement("a");
     denyLink.innerHTML = "Deny"
-    denyLink.href = `/api/admin/moderate?id=${obj.ID}&approve=false`;
-    denyLink.setAttribute('target', '_blank');
+    denyLink.href = `/api/moderate?id=${obj.ID}&approve=false`;
     denyLink.classList.add("btn", "btn-danger");
 
     modContainer.appendChild(hatName);
